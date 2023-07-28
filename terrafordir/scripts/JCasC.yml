@@ -1,0 +1,57 @@
+jenkins:
+  systemMessage: "Jenkins configured automatically by Jenkins Configuration as Code plugin\n\n"
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: VARIABLE1
+            value: foo
+          - key: VARIABLE2
+            value: bar
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: githubAccess
+              description: "Github Access"
+              username: appychipDevOps
+              password: <Token>
+
+
+jobs:
+  - script: >
+        multibranchPipelineJob('BuildDevFeatureBranch') {
+        branchSources {
+            github {
+                id('23232323') // IMPORTANT: use a constant and unique identifier
+                repoOwner('appychipDevOps')
+                repository('CICD-demo')
+                buildForkPRMerge(buildForkPRMerge = false)
+                buildOriginBranch(buildOriginBranch = false)
+                buildOriginBranchWithPR(buildOriginBranchWithPR = true)
+                scanCredentialsId('githubAccess')
+
+            }
+        }
+        }
+
+  - script: >
+      pipelineJob('BuildMainBranch') {
+          definition {
+              cpsScm {
+                  scm {
+                      git {
+                        branch('main')
+                          remote {
+                              github('appychipDevOps/CICD-demo')
+                          }
+                      }
+                  }
+                  scriptPath('MainBranchPipeline')
+              }
+          }
+      }
+
+
